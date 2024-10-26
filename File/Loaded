@@ -1,0 +1,214 @@
+local Library = {}
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Define themes
+local Themes = {
+    LightTheme = {
+        Background = Color3.fromRGB(255, 255, 255),
+        TextColor = Color3.fromRGB(0, 0, 0),
+        ButtonColor = Color3.fromRGB(220, 220, 220),
+        ToggleOnColor = Color3.fromRGB(0, 255, 0),  -- Green for ON state
+        ToggleOffColor = Color3.fromRGB(255, 0, 0), -- Red for OFF state
+    },
+    DarkTheme = {
+        Background = Color3.fromRGB(30, 30, 30),
+        TextColor = Color3.fromRGB(255, 255, 255),
+        ButtonColor = Color3.fromRGB(60, 60, 60),
+        ToggleOnColor = Color3.fromRGB(0, 255, 0),
+        ToggleOffColor = Color3.fromRGB(255, 0, 0),
+    },
+}
+
+-- Function to create UICorner with a specific corner radius
+local function CreateUICorner(parent)
+    local uiCorner = Instance.new("UICorner")
+    uiCorner.CornerRadius = UDim.new(0.03, 0)  -- Set corner radius to 0.03
+    uiCorner.Parent = parent
+end
+
+-- Create the main Library
+function Library:CreateLib(title, themeName)
+    local theme = Themes[themeName] or Themes.DarkTheme
+    local tabs = {}
+    local tabCount = 0
+
+    -- UI elements
+    local ScreenGui = Instance.new("ScreenGui")
+    local MainFrame = Instance.new("Frame")
+    local TitleLabel = Instance.new("TextLabel")
+    local TabContainer = Instance.new("Frame")
+    local ContentFrame = Instance.new("Frame")
+
+    -- ScreenGui setup
+    ScreenGui.Name = "CustomLibraryUI"
+    ScreenGui.Parent = game:GetService("CoreGui")
+
+    -- Main Frame setup
+    MainFrame.Size = UDim2.new(0, 500, 0, 350)
+    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    MainFrame.BackgroundColor3 = theme.Background
+    MainFrame.Parent = ScreenGui
+
+    -- Create UICorner for MainFrame
+    CreateUICorner(MainFrame)
+
+    -- Title Label setup
+    TitleLabel.Text = title
+    TitleLabel.Font = Enum.Font.SourceSans
+    TitleLabel.TextSize = 24
+    TitleLabel.TextColor3 = theme.TextColor
+    TitleLabel.Size = UDim2.new(1, 0, 0, 50)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Parent = MainFrame
+
+    -- Tab Container setup
+    TabContainer.Size = UDim2.new(0, 100, 1, -50)
+    TabContainer.Position = UDim2.new(0, 0, 0, 50)
+    TabContainer.BackgroundColor3 = theme.ButtonColor
+    TabContainer.Parent = MainFrame
+
+    -- Create UICorner for TabContainer
+    CreateUICorner(TabContainer)
+
+    -- Content Frame setup
+    ContentFrame.Size = UDim2.new(1, -100, 1, -50)
+    ContentFrame.Position = UDim2.new(0, 100, 0, 50)
+    ContentFrame.BackgroundColor3 = theme.Background
+    ContentFrame.Parent = MainFrame
+
+    -- Create UICorner for ContentFrame
+    CreateUICorner(ContentFrame)
+
+    -- Drag functionality
+    local dragToggle, dragStart, startPos = nil, nil, nil
+    local dragSpeed = 0.25
+
+    local function updateInput(input)
+        local delta = input.Position - dragStart
+        local newPosition = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        TweenService:Create(MainFrame, TweenInfo.new(dragSpeed), {Position = newPosition}):Play()
+    end
+
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragToggle = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragToggle = false
+                end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateInput(input)
+        end
+    end)
+
+    -- Function to create tabs
+    function Library:CreateTab(name)
+        tabCount = tabCount + 1
+        local TabButton = Instance.new("TextButton")
+        TabButton.Text = name
+        TabButton.Size = UDim2.new(1, 0, 0, 30)
+        TabButton.BackgroundColor3 = theme.ButtonColor
+        TabButton.TextColor3 = theme.TextColor
+        TabButton.Position = UDim2.new(0, 0, 0, 30 * (tabCount - 1))  -- Adjust position based on tabCount
+        TabButton.Parent = TabContainer
+
+        -- Create UICorner for TabButton
+        CreateUICorner(TabButton)
+
+        -- Set up a container for this tab's content
+        local TabContent = Instance.new("Frame")
+        TabContent.Size = UDim2.new(1, 0, 1, 0)
+        TabContent.BackgroundTransparency = 1  -- Hide initially
+        TabContent.Visible = false
+        TabContent.Parent = ContentFrame
+
+        -- Create UICorner for TabContent
+        CreateUICorner(TabContent)
+
+        -- Show this tab's content when clicked
+        TabButton.MouseButton1Click:Connect(function()
+            for _, tab in pairs(tabs) do
+                tab.Content.Visible = false  -- Hide all tab content
+            end
+            TabContent.Visible = true  -- Show the selected tab content
+        end)
+
+        -- Store the tab and its content in the tabs table
+        table.insert(tabs, {Button = TabButton, Content = TabContent})
+
+        -- Automatically select the first tab
+        if #tabs == 1 then
+            TabContent.Visible = true
+        end
+
+        return TabContent  -- Return the content frame for this tab
+    end
+
+    -- Function to create buttons in a tab
+    function Library:CreateButton(tabContent, buttonText, buttonContent)
+        local Button = Instance.new("TextButton")
+        Button.Text = buttonText
+        Button.Size = UDim2.new(1, 0, 0, 30)
+        Button.BackgroundColor3 = theme.ButtonColor
+        Button.TextColor3 = theme.TextColor
+        Button.Parent = tabContent
+
+        -- Create UICorner for Button
+        CreateUICorner(Button)
+
+        -- Display button content on click
+        Button.MouseButton1Click:Connect(function()
+            print(buttonContent)  -- Replace this with desired functionality
+        end)
+
+        -- Adjust the position of buttons in the tab content
+        local buttonCount = #tabContent:GetChildren() - 1  -- Exclude the Frame itself
+        Button.Position = UDim2.new(0, 0, 0, buttonCount * 35)  -- Stack buttons vertically
+    end
+
+    -- Function to create toggle buttons in a tab
+    function Library:CreateToggle(tabContent, toggleText, callback)
+        local ToggleButton = Instance.new("TextButton")
+        ToggleButton.Text = toggleText
+        ToggleButton.Size = UDim2.new(1, 0, 0, 30)
+        ToggleButton.BackgroundColor3 = theme.ToggleOffColor
+        ToggleButton.TextColor3 = theme.TextColor
+        ToggleButton.Parent = tabContent
+
+        -- Create UICorner for ToggleButton
+        CreateUICorner(ToggleButton)
+
+        -- Track toggle state
+        local isToggled = false
+
+        -- Change appearance and call the function on toggle
+        ToggleButton.MouseButton1Click:Connect(function()
+            isToggled = not isToggled
+            ToggleButton.Text = isToggled and "Turn Off" or toggleText  -- Change text based on toggle state
+            ToggleButton.BackgroundColor3 = isToggled and theme.ToggleOnColor or theme.ToggleOffColor
+            callback(isToggled)  -- Call the callback function with the current state
+        end)
+
+        -- Adjust the position of toggle buttons in the tab content
+        local toggleCount = #tabContent:GetChildren() - 1  -- Exclude the Frame itself
+        ToggleButton.Position = UDim2.new(0, 0, 0, toggleCount * 35)  -- Stack buttons vertically
+    end
+
+    return Library  -- Return the main library object
+end
+
+-- Set Library callable like Library("Title", "Theme")
+setmetatable(Library, {
+    __call = function(_, title, themeName)
+        return Library:CreateLib(title, themeName)
+    end
+})
