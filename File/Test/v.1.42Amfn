@@ -1,0 +1,251 @@
+local Library = {}
+Library.TweenService = game:GetService("TweenService")
+Library.UserInputService = game:GetService("UserInputService")
+
+Library.Themes = {
+    LightTheme = {
+        Background = Color3.fromRGB(255, 255, 255),
+        TextColor = Color3.fromRGB(0, 0, 0),
+        ButtonColor = Color3.fromRGB(220, 220, 220),
+        ToggleOnColor = Color3.fromRGB(0, 255, 0),
+        ToggleOffColor = Color3.fromRGB(255, 0, 0),
+        SectionColor = Color3.fromRGB(240, 240, 240),
+        DropdownColor = Color3.fromRGB(200, 200, 200) 
+    },
+    DarkTheme = {
+        Background = Color3.fromRGB(30, 30, 30),
+        TextColor = Color3.fromRGB(255, 255, 255),
+        ButtonColor = Color3.fromRGB(60, 60, 60),
+        ToggleOnColor = Color3.fromRGB(0, 255, 0),
+        ToggleOffColor = Color3.fromRGB(255, 0, 0),
+        SectionColor = Color3.fromRGB(50, 50, 50),
+        DropdownColor = Color3.fromRGB(70, 70, 70) 
+    },
+    NightTheme = {
+        Background = Color3.fromRGB(15, 15, 30),
+        TextColor = Color3.fromRGB(230, 230, 255),
+        ButtonColor = Color3.fromRGB(40, 60, 90),
+        ToggleOnColor = Color3.fromRGB(0, 150, 255),
+        ToggleOffColor = Color3.fromRGB(150, 30, 60),
+        SectionColor = Color3.fromRGB(25, 25, 50),
+        DropdownColor = Color3.fromRGB(50, 50, 100) 
+    },
+    OceanTheme = {
+        Background = Color3.fromRGB(0, 64, 128),
+        TextColor = Color3.fromRGB(255, 255, 255),
+        ButtonColor = Color3.fromRGB(0, 122, 204),
+        ToggleOnColor = Color3.fromRGB(0, 200, 150),
+        ToggleOffColor = Color3.fromRGB(200, 40, 60),
+        SectionColor = Color3.fromRGB(0, 51, 102),
+        DropdownColor = Color3.fromRGB(0, 80, 160)
+    },
+    EnchardTheme = {
+        Background = Color3.fromRGB(20, 20, 50),
+        TextColor = Color3.fromRGB(255, 235, 205),
+        ButtonColor = Color3.fromRGB(70, 50, 100),
+        ToggleOnColor = Color3.fromRGB(180, 30, 60),
+        ToggleOffColor = Color3.fromRGB(100, 20, 40),
+        SectionColor = Color3.fromRGB(40, 30, 70),
+        DropdownColor = Color3.fromRGB(60, 40, 90) 
+    }
+}
+
+function Library:CreateUICorner(parent)
+    local uiCorner = Instance.new("UICorner")
+    uiCorner.CornerRadius = UDim.new(0.03, 0)
+    uiCorner.Parent = parent
+end
+
+function Library:CreateShadow(parent)
+    local shadow = Instance.new("ImageLabel")
+    shadow.Size = UDim2.new(1, 10, 1, 10)
+    shadow.Position = UDim2.new(0, -5, 0, -5)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://6012280157" 
+    shadow.ImageColor3 = Color3.new(0, 0, 0)
+    shadow.ImageTransparency = 0.5
+    shadow.Parent = parent
+end
+
+function Library:CreateLib(title, themeName)
+    local theme = Library.Themes[themeName] or Library.Themes.DarkTheme
+    local tabs = {}
+    local tabCount = 0
+
+    local ScreenGui = Instance.new("ScreenGui")
+    local MainFrame = Instance.new("Frame")
+    local TitleLabel = Instance.new("TextLabel")
+    local TabContainer = Instance.new("Frame")
+    local ContentFrame = Instance.new("Frame")
+
+    ScreenGui.Name = "CustomLibraryUI"
+    ScreenGui.Parent = game:GetService("CoreGui")
+
+    MainFrame.Size = UDim2.new(0, 500, 0, 350)
+    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    MainFrame.BackgroundColor3 = theme.Background
+    MainFrame.Parent = ScreenGui
+
+    self:CreateUICorner(MainFrame)
+    self:CreateShadow(MainFrame)
+
+    TitleLabel.Text = title
+    TitleLabel.Font = Enum.Font.GothamBold 
+    TitleLabel.TextSize = 24
+    TitleLabel.TextColor3 = theme.TextColor
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left 
+    TitleLabel.Size = UDim2.new(1, -20, 0, 50) 
+    TitleLabel.Position = UDim2.new(0, 10, 0, 0) 
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Parent = MainFrame
+
+    TabContainer.Size = UDim2.new(0, 100, 1, -50)
+    TabContainer.Position = UDim2.new(0, 0, 0, 50)
+    TabContainer.BackgroundColor3 = theme.ButtonColor
+    TabContainer.Parent = MainFrame
+
+    self:CreateUICorner(TabContainer)
+
+    ContentFrame.Size = UDim2.new(1, -100, 1, -50)
+    ContentFrame.Position = UDim2.new(0, 100, 0, 50)
+    ContentFrame.BackgroundColor3 = theme.Background
+    ContentFrame.Parent = MainFrame
+
+    self:CreateUICorner(ContentFrame)
+
+    local dragToggle, dragStart, startPos = nil, nil, nil
+
+    local function updateInput(input)
+        local delta = input.Position - dragStart
+        local newPosition = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        MainFrame.Position = newPosition
+    end
+
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragToggle = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragToggle = false
+                end
+            end)
+        end
+    end)
+
+    Library.UserInputService.InputChanged:Connect(function(input)
+        if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateInput(input)
+        end
+    end)
+
+    function Library:CreateTab(name)
+        tabCount = tabCount + 1
+        local TabButton = Instance.new("TextButton")
+        TabButton.Font = Enum.Font.Highway
+        TabButton.Text = name
+        TabButton.TextSize = 12
+        TabButton.Size = UDim2.new(1, 0, 0, 30)
+        TabButton.TextColor3 = theme.TextColor
+        TabButton.Position = UDim2.new(0, 0, 0, 30 * (tabCount - 1))
+        TabButton.Parent = TabContainer
+        TabButton.BackgroundTransparency = 0.8
+        self:CreateUICorner(TabButton)
+
+        local TabContent = Instance.new("Frame")
+        TabContent.Size = UDim2.new(1, 0, 1, 0)
+        TabContent.BackgroundTransparency = 1
+        TabContent.Visible = false
+        TabContent.Parent = ContentFrame
+
+        self:CreateUICorner(TabContent)
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _, tab in pairs(tabs) do
+                tab.Content.Visible = false
+            end
+            TabContent.Visible = true
+        end)
+
+        table.insert(tabs, {Button = TabButton, Content = TabContent})
+
+        if #tabs == 1 then
+            TabContent.Visible = true
+        end
+
+        return TabContent
+    end
+
+    function Library:CreateSection(tabContent, sectionTitle)
+        local SectionFrame = Instance.new("Frame")
+        SectionFrame.Size = UDim2.new(1, 0, 0, 50)
+        SectionFrame.BackgroundColor3 = theme.SectionColor
+        SectionFrame.Parent = tabContent
+
+        local TitleLabel = Instance.new("TextLabel")
+        TitleLabel.Text = sectionTitle
+        TitleLabel.Font = Enum.Font.SourceSans
+        TitleLabel.TextSize = 18
+        TitleLabel.TextColor3 = theme.TextColor
+        TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+        TitleLabel.BackgroundTransparency = 1
+        TitleLabel.Parent = SectionFrame
+
+        return SectionFrame
+    end
+
+    function Library:CreateButton(tabContent, buttonTitle, callback)
+        local Button = Instance.new("TextButton")
+        Button.Size = UDim2.new(0, 200, 0, 40)
+        Button.Text = buttonTitle
+        Button.BackgroundColor3 = theme.ButtonColor
+        Button.TextColor3 = theme.TextColor
+        Button.Parent = tabContent
+
+        self:CreateUICorner(Button)
+
+        Button.MouseButton1Click:Connect(function()
+            callback()
+        end)
+
+        return Button
+    end
+
+    function Library:CreateToggle(tabContent, toggleTitle, defaultValue, callback)
+        local ToggleFrame = Instance.new("Frame")
+        ToggleFrame.Size = UDim2.new(1, 0, 0, 30)
+        ToggleFrame.BackgroundColor3 = theme.SectionColor
+        ToggleFrame.Parent = tabContent
+
+        local ToggleButton = Instance.new("TextButton")
+        ToggleButton.Size = UDim2.new(0, 50, 0, 30)
+        ToggleButton.Position = UDim2.new(1, -55, 0, 0)
+        ToggleButton.BackgroundColor3 = defaultValue and theme.ToggleOnColor or theme.ToggleOffColor
+        ToggleButton.Text = ""
+        ToggleButton.Parent = ToggleFrame
+
+        self:CreateUICorner(ToggleButton)
+
+        local TitleLabel = Instance.new("TextLabel")
+        TitleLabel.Text = toggleTitle
+        TitleLabel.TextColor3 = theme.TextColor
+        TitleLabel.BackgroundTransparency = 1
+        TitleLabel.Position = UDim2.new(0, 0, 0, 0)
+        TitleLabel.Size = UDim2.new(1, -55, 0, 30)
+        TitleLabel.Parent = ToggleFrame
+
+        ToggleButton.MouseButton1Click:Connect(function()
+            defaultValue = not defaultValue
+            ToggleButton.BackgroundColor3 = defaultValue and theme.ToggleOnColor or theme.ToggleOffColor
+            callback(defaultValue)
+        end)
+
+        return ToggleFrame
+    end
+
+    return Library
+end
+
+return Library
