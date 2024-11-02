@@ -226,72 +226,59 @@ function Library:CreateLib(title, themeName)
 
 
 
-function Library:CreateDropdown(tabContent, dropdownText, options, callback)
-    local theme = Library.Themes.DarkTheme 
+ function Library:CreateDropdown(tabContent, title, options, callback)
+        local DropdownFrame = Instance.new("Frame")
+        DropdownFrame.Size = UDim2.new(1, 0, 0, 40)
+        DropdownFrame.BackgroundColor3 = theme.Background
+        DropdownFrame.Parent = tabContent
 
-    local DropdownFrame = Instance.new("Frame")
-    DropdownFrame.Size = UDim2.new(1, 0, 0, 30)
-    DropdownFrame.BackgroundColor3 = theme.ButtonColor
-    DropdownFrame.Parent = tabContent
-    DropdownFrame.ClipsDescendants = true  
-    DropdownFrame.ZIndex = 2 
-    self:CreateUICorner(DropdownFrame)
+        local DropdownLabel = Instance.new("TextLabel")
+        DropdownLabel.Text = title
+        DropdownLabel.Size = UDim2.new(0.8, 0, 1, 0)
+        DropdownLabel.TextColor3 = theme.TextColor
+        DropdownLabel.BackgroundTransparency = 1
+        DropdownLabel.Parent = DropdownFrame
 
-    local DropdownButton = Instance.new("TextButton")
-    DropdownButton.Text = dropdownText
-    DropdownButton.Size = UDim2.new(1, 0, 1, 0)
-    DropdownButton.BackgroundTransparency = 1
-    DropdownButton.TextColor3 = theme.TextColor
-    DropdownButton.Parent = DropdownFrame
-    DropdownButton.ZIndex = 3  
+        local DropdownButton = Instance.new("TextButton")
+        DropdownButton.Size = UDim2.new(0.2, 0, 1, 0)
+        DropdownButton.Position = UDim2.new(0.8, 0, 0, 0)
+        DropdownButton.BackgroundColor3 = theme.DropdownColor
+        DropdownButton.Text = "Select"
+        DropdownButton.Parent = DropdownFrame
+        self:CreateUICorner(DropdownButton)
 
-    local OptionsFrame = Instance.new("ScrollingFrame")
-    OptionsFrame.Size = UDim2.new(1, 0, 0, math.min(#options * 30, 120))
-    OptionsFrame.Position = UDim2.new(0, 0, 1, 0)
-    OptionsFrame.BackgroundTransparency = 0.1
-    OptionsFrame.BorderSizePixel = 0
-    OptionsFrame.ScrollBarThickness = 6
-    OptionsFrame.Visible = false
-    OptionsFrame.Parent = DropdownFrame
-    OptionsFrame.CanvasSize = UDim2.new(0, 0, 0, #options * 30)
-    OptionsFrame.ZIndex = 3 
+        local DropdownList = Instance.new("ScrollingFrame")
+        DropdownList.Size = UDim2.new(1, 0, 0, 100)
+        DropdownList.Position = UDim2.new(0, 0, 1, 0)
+        DropdownList.BackgroundColor3 = theme.DropdownColor
+        DropdownList.Parent = tabContent
+        DropdownList.Visible = false
 
-    -- Create options and connect them to the callback
-    for i, option in ipairs(options) do
-        local OptionButton = Instance.new("TextButton")
-        OptionButton.Text = option
-        OptionButton.Size = UDim2.new(1, 0, 0, 30)
-        OptionButton.BackgroundColor3 = theme.ButtonColor
-        OptionButton.TextColor3 = theme.TextColor
-        OptionButton.Position = UDim2.new(0, 0, 0, (i - 1) * 30)
-        OptionButton.Parent = OptionsFrame
-        OptionButton.ZIndex = 4 
+        local UIListLayout = Instance.new("UIListLayout")
+        UIListLayout.Parent = DropdownList
 
-        self:CreateUICorner(OptionButton)
+        for _, option in ipairs(options) do
+            local OptionButton = Instance.new("TextButton")
+            OptionButton.Size = UDim2.new(1, 0, 0, 30)
+            OptionButton.Text = option
+            OptionButton.TextColor3 = theme.TextColor
+            OptionButton.BackgroundColor3 = theme.DropdownColor
+            OptionButton.Parent = DropdownList
+            self:CreateUICorner(OptionButton)
 
-        OptionButton.MouseButton1Click:Connect(function()
-            DropdownButton.Text = option
-            OptionsFrame.Visible = false
-            callback(option)
-        end)
-    end
-
-    DropdownButton.MouseButton1Click:Connect(function()
-        OptionsFrame.Visible = not OptionsFrame.Visible
-    end)
-
-    Library.UserInputService.InputBegan:Connect(function(input)
-        if OptionsFrame.Visible and input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local clickedObject = Library.UserInputService:GetFocusedTextBox()
-            if not (clickedObject and (clickedObject:IsDescendantOf(OptionsFrame) or clickedObject == DropdownButton)) then
-                OptionsFrame.Visible = false
-            end
+            OptionButton.MouseButton1Click:Connect(function()
+                DropdownButton.Text = option
+                DropdownList.Visible = false
+                callback(option)
+            end)
         end
-    end)
 
-    local dropdownCount = #tabContent:GetChildren() - 1
-    DropdownFrame.Position = UDim2.new(0, 0, 0, dropdownCount * 35)
-end
+        DropdownButton.MouseButton1Click:Connect(function()
+            DropdownList.Visible = not DropdownList.Visible
+        end)
+
+        return DropdownFrame
+    end
 
 
 
