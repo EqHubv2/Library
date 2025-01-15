@@ -70,11 +70,7 @@ Library.Themes = {
 }
 
 
-function Library:CreateUICorner(parent)
-    local uiCorner = Instance.new("UICorner")
-    uiCorner.CornerRadius = UDim.new(0.03, 0)
-    uiCorner.Parent = parent
-end
+
 
 function Library:CreateShadow(parent)
     local shadow = Instance.new("ImageLabel")
@@ -107,8 +103,6 @@ function Library:CreateLib(title, themeName)
     MainFrame.BackgroundColor3 = theme.Background
     MainFrame.Parent = ScreenGui
 
-    self:CreateUICorner(MainFrame)
-    self:CreateShadow(MainFrame)
 
     TitleLabel.Text = title
     TitleLabel.Font = Enum.Font.GothamBold 
